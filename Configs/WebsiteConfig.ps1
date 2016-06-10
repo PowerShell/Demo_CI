@@ -1,4 +1,21 @@
-﻿
+﻿Configuration Website
+{
+    import-dscresource -module PsDesiredStateConfiguration
+
+    node $AllNodes.where{$_.Role -eq "Website"}.NodeName
+    {
+        Environment Type
+        {
+            ensure   = 'Present'
+            Name     = 'TypeOfServer'
+            Value    = 'Web'
+        }
+    }
+}
+
+Website -OutputPath c:\Configs\
+
+<# Removing config temporarily
 Configuration Website
 {
     param
@@ -67,3 +84,4 @@ Configuration Website
         }
     }
 }
+#>

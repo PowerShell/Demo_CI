@@ -1,9 +1,10 @@
 ####################################################################
-# Unit tests for WebsiteConfig
+# Unit tests for DNSServer
 #
 # Unit tests content of DSC configuration as well as the MOF output.
 ####################################################################
 
+#region
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 Write-Verbose $here
 $parent = Split-Path -Parent $here
@@ -18,8 +19,9 @@ if (! (Get-Module xWebAdministration -ListAvailable))
 {
     Install-Module -Name xWebAdministration -Force
 }
+#endregion
 
-Describe "Website Configuration" {
+Describe "DNSServer Configuration" {
       
     Context "Configuration Script"{
         
@@ -43,8 +45,8 @@ Describe "Website Configuration" {
             (Get-Command Website).Parameters["SourcePath","WebsiteName","DestinationRootPath"].ToString() | Should not BeNullOrEmpty 
         }
 
-        It "Should use the xWebsite DSC resource" {
-            (Get-Command Website).Definition | Should Match "xWebsite"
+        It "Should use the sDNSServer DSC resource" {
+            (Get-Command Website).Definition | Should Match "xDNSServer"
         }
     }
 
@@ -52,28 +54,28 @@ Describe "Website Configuration" {
         $OutputPath = "TestDrive:\"
         
         It "Should generate a single mof file." {
-            Website -OutputPath $OutputPath -SourcePath "\\Server1\Configs\"
+            DNSServer -OutputPath $OutputPath 
             (Get-ChildItem -Path $OutputPath -File -Filter "*.mof" -Recurse ).count | Should be 1
         }
 
-        It "Should generate a mof file with the name 'Website.FourthCoffee'." {
-            Website -OutputPath $OutputPath -SourcePath "\\Server1\Configs\"
-            Join-Path $OutputPath "Website.FourthCoffee.mof" | Should Exist
+        It "Should generate a mof file with the name 'DNSServer'." {
+            DNSServer -OutputPath $OutputPath 
+            Join-Path $OutputPath "DNSServer.mof" | Should Exist
         }
 
         It "Should be a valid DSC MOF document"{
-            Website -OutputPath $OutputPath -SourcePath "\\Server1\Configs\"
-            mofcomp -check "$OutputPath\Website.FourthCoffee.mof" | Select-String "compiler returned error" | Should BeNullOrEmpty
+            DNSServer -OutputPath $OutputPath 
+            mofcomp -check "$OutputPath\DNSServer.mof" | Select-String "compiler returned error" | Should BeNullOrEmpty
         }
 
         It "Should generate a new version (2.0) mof document." {
-            Website -OutputPath $OutputPath -SourcePath "\\Server1\Configs\"
-            Join-Path $OutputPath "Website.FourthCoffee.mof" | Should Contain "Version=`"2.0.0`""
+            DNSServer -OutputPath $OutputPath 
+            Join-Path $OutputPath "DNSServer.mof" | Should Contain "Version=`"2.0.0`""
         }
 
-        It "Should create a mof that has a website named 'BustersBuns'." {
-            Website -OutputPath $OutputPath -SourcePath "\\Server1\Configs\" -WebSiteName "BustersBuns"
-            Join-Path $OutputPath "Website.BustersBuns.mof" | Should Contain "Name = `"BustersBuns`";"
+        It "Should create a mof that has a DNSServer with value of 'DNS'." {
+            DNSServer -OutputPath $OutputPath
+            Join-Path $OutputPath "DNSServer.mof" | Should Contain "Value = `"DNS`";"
         }
 
         #Clean up TestDrive between each test
