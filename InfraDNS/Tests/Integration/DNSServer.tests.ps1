@@ -10,7 +10,7 @@ $parent = Split-Path -Parent $here
 Write-Verbose $parent
 $configPath = Join-Path $parent "Configs"
 Write-Verbose $configPath
-$sut = ($MyInvocation.MyCommand.ToString()).Replace(".Tests.", ".")
+$sut = ($MyInvocation.MyCommand.ToString()) -Replace ".Tests.", "."
 Write-Verbose $sut
 . $(Join-Path $configPath $sut)
 
