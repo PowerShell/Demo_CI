@@ -30,21 +30,20 @@ Properties {
     $ConfigPath = "$PSScriptRoot\Configs"
 }
 
-Task Default -depends DeployConfigs
+Task Default -depends IntegrationTests
 
 Task GenerateEnvironmentFiles -Depends Clean {
      Exec {& $PSScriptRoot\TestEnv.ps1 -OutputPath $ConfigPath}
 }
 
 Task ScriptAnalysis -Depends GenerateEnvironmentFiles {
-    
-     # Run Script Analyzer
+    # Run Script Analyzer
     "Starting static analysis..."
     Invoke-ScriptAnalyzer -Path $ConfigPath 
 }
 
 Task UnitTests -Depends ScriptAnalysis {
-     # Run Unit Tests with Code Coverage
+    # Run Unit Tests with Code Coverage
     "Starting unit tests..."
 
     $PesterResults = Invoke-Pester -path "$TestsPath\Unit\"  -CodeCoverage "$ConfigPath\*.ps1" -OutputFile "$TestResultsPath\UnitTest.xml" -OutputFormat NUnitXml -PassThru
@@ -75,11 +74,35 @@ Task DeployConfigs -Depends CompileConfigs {
 }
 
 Task IntegrationTests -Depends DeployConfigs, UnitTests {
-    "Integration tests ran successfully"
+    "Starting Integration tests..."
+    #Run Integration tests on target node
+    $sess = New-PSSession -ComputerName TestAgent1 
+
+    #Create a folder to store test script on remote node
+    Invoke-Command -Session $sess -ScriptBlock { new-item \Tests\ -ItemType Directory -Force }
+    Copy-Item $PSScriptRoot\Integration\* c:\Tests -ToSession $sess 
+    
+    #Run pester on remote node and collect results
+    $PesterResults = Invoke-Command -Session $sess -ScriptBlock { Invoke-Pester -Path c:\Tests -OutputFile "c:\Tests\IntegrationTest.xml" -OutputFormat NUnitXml -PassThru }
+    
+    #Get Results xml from remote node
+    Copy-Item c:\Tests\IntegrationTest.xml $TestResultsPath -FromSession $sess -ErrorAction Continue
+    Invoke-Command -Session $sess -ScriptBlock {remove-Item "c:\Tests\IntegrationTest.xml"} -ErrorAction Continue
+
+    if($PesterResults.FailedCount -gt 0)
+    {
+        Throw-TestFailure -TestType Integration -PesterResults $PesterResults
+    }
 }
 
 Task AcceptanceTests -Depends DeployConfigs, IntegrationTests {
-    "Acceptance tests processed"
+    "Starting Acceptance tests..."
+    $PesterResults = Invoke-Pester -path "$TestsPath\Acceptance\" -OutputFile "$TestResultsPath\AcceptanceTest.xml" -OutputFormat NUnitXml -PassThru
+    
+    if($PesterResults.FailedCount -gt 0)
+    {
+        Throw-TestFailure -TestType Acceptance -PesterResults $PesterResults
+    }
 }
 
 Task Clean {
