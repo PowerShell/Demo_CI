@@ -45,10 +45,11 @@ function New-DscConfigurationDataDocument
         {
             $NumberOfServers = $Role.VMName.Count
         }
-        
+
         for($i = 1; $i -le $NumberOfServers; $i++)
         {
-            [hashtable]$NodeData =  @{    NodeName                = "$($Role.VMName)$i"
+            $j = if($Role.VMQuantity -gt 0){$i}
+            [hashtable]$NodeData =  @{    NodeName                = "$($Role.VMName)$j"
                                 Role                    = $Role.Role
                             }
             # Add Lability properties to ConfigurationData if they are included in the raw hashtable

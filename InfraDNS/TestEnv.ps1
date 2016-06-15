@@ -1,10 +1,15 @@
+param(
+    [parameter(Mandatory=$true)]
+    [string]
+    $OutputPath
+)
 
 Import-Module $PSScriptRoot\..\Assets\DscPipelineTools\DscPipelineTools.psd1 -Force
 
 
 # Define Unit Test Environment
 $UnitTestEnvironment = @{
-    Name                        = 'Test';
+    Name                        = 'TestEnv';
     Roles = @(
         @{  Role                = 'DNSServer';
             VMName              = 'TestAgent1';
@@ -12,4 +17,4 @@ $UnitTestEnvironment = @{
     )
 }
 
-Return New-DscConfigurationDataDocument -RawEnvData $UnitTestEnvironment -OutputPath $PSScriptRoot\Configs
+Return New-DscConfigurationDataDocument -RawEnvData $UnitTestEnvironment -OutputPath $OutputPath

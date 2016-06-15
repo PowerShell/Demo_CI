@@ -21,19 +21,19 @@ function Throw-TestFailure
     Throw $errorRecord
 }
 
+FormatTaskName "--------------- {0} ---------------"
+
 Properties {
-    $TestsPath = $PSScriptRoot\Tests
-    $TestResultsPath = $TestsPath\Results
-    $MofPath = $PSScriptRoot\..\MOF\
-    $ConfigPath = $PSScriptRoot\Tests
-    $ConfigData = $null #Override this!!
-    $FirstTask = 'CompileConfigs' #AcceptanceTests
+    $TestsPath = "$PSScriptRoot\Tests"
+    $TestResultsPath = "$TestsPath\Results"
+    $MofPath = "$PSScriptRoot\..\MOF\"
+    $ConfigPath = "$PSScriptRoot\Configs"
 }
 
-Task Default -depends $FirstTask
+Task Default -depends DeployConfigs
 
-Task GenerateEnvironmentFiles{
-     Exec {& $PSScriptRoot\TestEnv.ps1}
+Task GenerateEnvironmentFiles -Depends Clean {
+     Exec {& $PSScriptRoot\TestEnv.ps1 -OutputPath $ConfigPath}
 }
 
 Task ScriptAnalysis -Depends GenerateEnvironmentFiles {
@@ -47,7 +47,7 @@ Task UnitTests -Depends ScriptAnalysis {
      # Run Unit Tests with Code Coverage
     "Starting unit tests..."
 
-    $PesterResults = Invoke-Pester -path $TestsPath\Unit\  -CodeCoverage $ConfigPath\*.ps1 -OutputFile $TestResultsPath\UnitTest.xml -OutputFormat NUnitXml -PassThru
+    $PesterResults = Invoke-Pester -path "$TestsPath\Unit\"  -CodeCoverage "$ConfigPath\*.ps1" -OutputFile "$TestResultsPath\UnitTest.xml" -OutputFormat NUnitXml -PassThru
     $Coverage = $PesterResults.CodeCoverage.NumberOfCommandsExecuted / $PesterResults.CodeCoverage.NumberOfCommandsAnalyzed
     # how do we pass coverage numbers to TFS?
 
@@ -64,14 +64,14 @@ Task UnitTests -Depends ScriptAnalysis {
 Task CompileConfigs -Depends UnitTests {
     # Compile Configurations
     "Starting to compile configuration..."
-    . $ConfigPath\DNSServer.ps1
+    . "$ConfigPath\DNSServer.ps1"
 
-    DNSServer -OutputPath $MofPath
+    DNSServer -ConfigurationData "$ConfigPath\TestEnv.psd1" -OutputPath $MofPath
 }
 
 Task DeployConfigs -Depends CompileConfigs {
-    "Configs applied to target nodes"
-    #push or Pull environment
+    "Deploying configurations to target nodes..."
+    Start-DscConfiguration -path $MofPath -Wait -Verbose
 }
 
 Task IntegrationTests -Depends DeployConfigs, UnitTests {
@@ -80,4 +80,15 @@ Task IntegrationTests -Depends DeployConfigs, UnitTests {
 
 Task AcceptanceTests -Depends DeployConfigs, IntegrationTests {
     "Acceptance tests processed"
+}
+
+Task Clean {
+    #Remove mof output from previous runs
+    Remove-Item "$MofPath\*.mof" -Verbose
+
+    #Remove Test Results from previous runs
+    Remove-Item "$TestResultsPath\*.xml" -Verbose
+
+    #Remove ConfigData generated from previous runs
+    Remove-Item "$ConfigsPath\*.psd1" -Verbose
 }
