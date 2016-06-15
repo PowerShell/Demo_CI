@@ -13,8 +13,6 @@ Configuration DNSServer
     }
 }
 
-DNSServer -OutputPath c:\Configs\
-
 <#
 $zone = 'foo.io'
 

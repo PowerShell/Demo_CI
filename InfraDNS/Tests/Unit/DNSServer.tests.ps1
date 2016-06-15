@@ -8,45 +8,52 @@
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 Write-Verbose $here
 $parent = Split-Path -Parent $here
-Write-Verbose $parent
-$configPath = Join-Path $parent "Configs"
+$GrandParent = Split-Path -Parent $parent
+Write-Verbose $GrandParent
+$configPath = Join-Path $GrandParent "Configs"
 Write-Verbose $configPath
-$sut = ($MyInvocation.MyCommand.ToString()) -Replace ".Tests.", "."
+$sut = ($MyInvocation.MyCommand.ToString()) -replace ".Tests.","."
 Write-Verbose $sut
-. $(Join-Path $configPath $sut)
+. $(Join-Path -Path $configPath -ChildPath $sut)
 
-if (! (Get-Module xWebAdministration -ListAvailable))
-{
-    Install-Module -Name xWebAdministration -Force
-}
 #endregion
 
 Describe "DNSServer Configuration" {
-      
+    Context "Configuration Script" {
+        It "Should be true" {
+            $true | Should be $true
+        }
+        It "Should be 10" {
+            10 | Should be 10
+        }
+    }
+}      
+
+<#
     Context "Configuration Script"{
         
         It "Should be a DSC configuration script" {
-            (Get-Command Website).CommandType | Should be "Configuration"
+            (Get-Command DNSServer).CommandType | Should be "Configuration"
         }
 
         It "Should not be a DSC Meta-configuration" {
-            (Get-Command website).IsMetaConfiguration | Should Not be $true
+            (Get-Command DNSServer).IsMetaConfiguration | Should Not be $true
         }
         
         It "Should require the source path parameter" {
-            (Get-Command Website).Parameters["SourcePath"].Attributes.Mandatory | Should be $true
+            (Get-Command DNSServer).Parameters["SourcePath"].Attributes.Mandatory | Should be $true
         }
 
         It "Should fail when an invalid source path is provided" {
-            website -SourcePath "This is not a path" | should Throw
+            DNSServer -SourcePath "This is not a path" | should Throw
         }
 
         It "Should include the following 3 parameters: 'SourcePath','WebsiteName','DestinationRootPath' " {
-            (Get-Command Website).Parameters["SourcePath","WebsiteName","DestinationRootPath"].ToString() | Should not BeNullOrEmpty 
+            (Get-Command DNSServer).Parameters["SourcePath","WebsiteName","DestinationRootPath"].ToString() | Should not BeNullOrEmpty 
         }
 
         It "Should use the sDNSServer DSC resource" {
-            (Get-Command Website).Definition | Should Match "xDNSServer"
+            (Get-Command DNSServer).Definition | Should Match "xDNSServer"
         }
     }
 
@@ -85,3 +92,4 @@ Describe "DNSServer Configuration" {
 
     }
 }
+#>
