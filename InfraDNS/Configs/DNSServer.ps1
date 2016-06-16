@@ -1,6 +1,6 @@
 Configuration DNSServer
 {
-    import-dscresource -module PsDesiredStateConfiguration
+    Import-DscResource -Module PsDesiredStateConfiguration
 
     node $AllNodes.where{$_.Role -eq "DNSServer"}.NodeName
     {
