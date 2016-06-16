@@ -4,7 +4,9 @@
 # Integration tests:  DNS server is configured as intended.
 ####################################################################
 
+Import-Module PoshSpec
+
 Describe 'Services' {    
-    Service w32time Status { Should Be Running }
+    Service w32time Status { Should Be Stopped }
     Service bits Status { Should Be Stopped }
 }

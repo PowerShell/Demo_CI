@@ -50,7 +50,7 @@ Task UnitTests -Depends ScriptAnalysis {
     $Coverage = $PesterResults.CodeCoverage.NumberOfCommandsExecuted / $PesterResults.CodeCoverage.NumberOfCommandsAnalyzed
     # how do we pass coverage numbers to TFS?
 
-    if($PesterResults.FailedCount -gt 0)
+    if($PesterResults.FailedCount) #If Pester fails any tests fail this task
     {
         Throw-TestFailure -TestType Unit -PesterResults $PesterResults
     }
@@ -71,25 +71,26 @@ Task CompileConfigs -Depends UnitTests {
 Task DeployConfigs -Depends CompileConfigs {
     "Deploying configurations to target nodes..."
     Start-DscConfiguration -path $MofPath -Wait -Verbose
+    #push or pull
 }
 
 Task IntegrationTests -Depends DeployConfigs, UnitTests {
     "Starting Integration tests..."
     #Run Integration tests on target node
-    $Session = New-PSSession -ComputerName TestAgent1 
+    $Session = New-PSSession -ComputerName TestAgent1
 
     #Create a folder to store test script on remote node
-    Invoke-Command -Session $Session -ScriptBlock { new-item \Tests\ -ItemType Directory -Force }
-    Copy-Item -path "$PSScriptRoot\Integration\*" -Destination "c:\Tests" -ToSession $Session 
+    Invoke-Command -Session $Session -ScriptBlock { $null = new-item \Tests\ -ItemType Directory -Force }
+    Copy-Item -Path "$TestsPath\Integration\*" -Destination "c:\Tests" -ToSession $Session -verbose
     
     #Run pester on remote node and collect results
-    $PesterResults = Invoke-Command -Session $Session -ScriptBlock { Invoke-Pester -Path c:\Tests -OutputFile "c:\Tests\IntegrationTest.xml" -OutputFormat NUnitXml -PassThru }
+    $PesterResults = Invoke-Command -Session $Session -ScriptBlock { Invoke-Pester -Path c:\Tests -OutputFile "c:\Tests\IntegrationTest.xml" -OutputFormat NUnitXml -PassThru } 
     
     #Get Results xml from remote node
-    Copy-Item c:\Tests\IntegrationTest.xml $TestResultsPath -FromSession $Session -ErrorAction Continue
-    Invoke-Command -Session $Session -ScriptBlock {remove-Item "c:\Tests\IntegrationTest.xml"} -ErrorAction Continue
+    Copy-Item -path "c:\Tests\IntegrationTest.xml" -Destination "$TestResultsPath" -FromSession $Session #-ErrorAction Continue
+    Invoke-Command -Session $Session -ScriptBlock {remove-Item "c:\Tests\" -Recurse} #-ErrorAction Continue
 
-    if($PesterResults.FailedCount -gt 0)
+    if($PesterResults.FailedCount) #If Pester fails any tests fail this task
     {
         Throw-TestFailure -TestType Integration -PesterResults $PesterResults
     }
@@ -97,9 +98,12 @@ Task IntegrationTests -Depends DeployConfigs, UnitTests {
 
 Task AcceptanceTests -Depends DeployConfigs, IntegrationTests {
     "Starting Acceptance tests..."
+    #Set module path
+    #Invoke-OperationValidation -Module Acceptance
+    
     $PesterResults = Invoke-Pester -path "$TestsPath\Acceptance\" -OutputFile "$TestResultsPath\AcceptanceTest.xml" -OutputFormat NUnitXml -PassThru
     
-    if($PesterResults.FailedCount -gt 0)
+    if($PesterResults.FailedCount) #If Pester fails any tests fail this task
     {
         Throw-TestFailure -TestType Acceptance -PesterResults $PesterResults
     }
