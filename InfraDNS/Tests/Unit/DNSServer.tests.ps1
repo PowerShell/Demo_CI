@@ -42,24 +42,19 @@ Describe "DNSServer Configuration" {
             (Get-ChildItem -Path $OutputPath -File -Filter "*.mof" -Recurse ).count | Should be 1
         }
 
-        It "Should generate a mof file with the name 'DNSServer'." {
+        It "Should generate a mof file with the name 'TestAgent1'." {
             DNSServer -OutputPath $OutputPath 
-            Join-Path $OutputPath "DNSServer.mof" | Should Exist
+            Join-Path $OutputPath "TestAgent1.mof" | Should Exist
         }
 
         It "Should be a valid DSC MOF document"{
             DNSServer -OutputPath $OutputPath 
-            mofcomp -check "$OutputPath\DNSServer.mof" | Select-String "compiler returned error" | Should BeNullOrEmpty
+            mofcomp -check "$OutputPath\TestAgent1.mof" | Select-String "compiler returned error" | Should BeNullOrEmpty
         }
 
         It "Should generate a new version (2.0) mof document." {
             DNSServer -OutputPath $OutputPath 
-            Join-Path $OutputPath "DNSServer.mof" | Should Contain "Version=`"2.0.0`""
-        }
-
-        It "Should create a mof that has a DNSServer with value of 'DNS'." {
-            DNSServer -OutputPath $OutputPath
-            Join-Path $OutputPath "DNSServer.mof" | Should Contain "Value = `"DNS`";"
+            Join-Path $OutputPath "TestAgent1.mof" | Should Contain "Version=`"2.0.0`""
         }
 
         #Clean up TestDrive between each test

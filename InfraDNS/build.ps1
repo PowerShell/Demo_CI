@@ -31,7 +31,7 @@ Properties {
     $RequiredModules = @(@{Name='xDnsServer';Version='1.7.0.0'}, @{Name='xNetworking';Version='2.9.0.0'}) 
 }
 
-Task Default -depends DeployModules
+Task Default -depends UnitTests
 
 Task GenerateEnvironmentFiles -Depends Clean {
      Exec {& $PSScriptRoot\TestEnv.ps1 -OutputPath $ConfigPath}
@@ -44,7 +44,7 @@ Task ScriptAnalysis -Depends GenerateEnvironmentFiles {
 
 }
 
-Task InstallModules <#-Depends ScriptAnalysis#> {
+Task InstallModules -Depends ScriptAnalysis {
     # Install resources on build agent
     "Installing required resources..."
 
@@ -55,7 +55,7 @@ Task InstallModules <#-Depends ScriptAnalysis#> {
     
     foreach ($Resource in $RequiredModules)
     {
-        Install-Module -Name $Resource.Name -RequiredVersion $Resource.Version
+        Install-Module -Name $Resource.Name -RequiredVersion $Resource.Version -Force
     }
 }
 
@@ -85,7 +85,7 @@ Task CompileConfigs -Depends UnitTests {
     DNSServer -ConfigurationData "$ConfigPath\TestEnv.psd1" -OutputPath $MofPath
 }
 
-Task DeployModules -Depends InstallModules<#, UnitTests#> {
+Task DeployModules -Depends InstallModules, UnitTests {
     # Copy resources from build agent to target node(s)
     "Deploying resources to target nodes..."
 
