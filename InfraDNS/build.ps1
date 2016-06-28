@@ -49,7 +49,7 @@ Task InstallModules -Depends ScriptAnalysis {
     "Installing required resources..."
 
     #Workaround for bug in Install-Module cmdlet
-    PackageManagement\Get-PackageProvider -Name NuGet -Force
+    PackageManagement\Install-PackageProvider -Name NuGet -Force
     Register-PSRepository -Name PSGallery -SourceLocation https://www.powershellgallery.com/api/v2/ -InstallationPolicy Trusted -PackageManagementProvider NuGet
     #End Workaround
     
