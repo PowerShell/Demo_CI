@@ -28,9 +28,10 @@ Properties {
     $TestResultsPath = "$TestsPath\Results"
     $MofPath = "$PSScriptRoot\..\MOF\"
     $ConfigPath = "$PSScriptRoot\Configs"
+    $RequiredModules = 'xDnsServer', 'xNetworking' 
 }
 
-Task Default -depends AcceptanceTests
+Task Default -depends DeployModules
 
 Task GenerateEnvironmentFiles -Depends Clean {
      Exec {& $PSScriptRoot\TestEnv.ps1 -OutputPath $ConfigPath}
@@ -39,10 +40,21 @@ Task GenerateEnvironmentFiles -Depends Clean {
 Task ScriptAnalysis -Depends GenerateEnvironmentFiles {
     # Run Script Analyzer
     "Starting static analysis..."
-    Invoke-ScriptAnalyzer -Path $ConfigPath 
+    Invoke-ScriptAnalyzer -Path $ConfigPath -ExcludeRule 'PSMissingModuleManifestField'
+
 }
 
-Task UnitTests -Depends ScriptAnalysis {
+Task InstallModules #-Depends ScriptAnalysis {
+    # Install resources on build agent
+    "Installing required resources..."
+
+    foreach ($Resource in $RequiredModules)
+    {
+        Install-Module -Name $Resource.Name -RequiredVersion $Resource.Version
+    }
+}
+
+Task UnitTests -Depends InstallModules {
     # Run Unit Tests with Code Coverage
     "Starting unit tests..."
 
@@ -68,7 +80,23 @@ Task CompileConfigs -Depends UnitTests {
     DNSServer -ConfigurationData "$ConfigPath\TestEnv.psd1" -OutputPath $MofPath
 }
 
-Task DeployConfigs -Depends CompileConfigs {
+Task DeployModules -Depends InstallModules#, UnitTests {
+    # Copy resources from build agent to target node(s)
+    "Deploying resources to target nodes..."
+
+    $Session = New-PSSession -ComputerName TestAgent1
+
+    foreach ($Resource in $RequiredModules)
+    {
+        $ModulePath = "$env:ProgramFiles\WindowsPowerShell\Modules\$($Resource.Name)\$($Resource.Version)\"
+
+        copy-item $ModulePath $ModulePath -Recurse -Force -ToSession $Session
+    }
+
+    Remove-PSSession $Session
+}
+
+Task DeployConfigs -Depends DeployModules, CompileConfigs {
     "Deploying configurations to target nodes..."
     Start-DscConfiguration -path $MofPath -Wait -Verbose
     #push or pull
@@ -94,6 +122,8 @@ Task IntegrationTests -Depends DeployConfigs, UnitTests {
     {
         Throw-TestFailure -TestType Integration -PesterResults $PesterResults
     }
+
+    Remove-PSSession $Session
 }
 
 Task AcceptanceTests -Depends DeployConfigs, IntegrationTests {
@@ -111,11 +141,31 @@ Task AcceptanceTests -Depends DeployConfigs, IntegrationTests {
 
 Task Clean {
     #Remove mof output from previous runs
-    Remove-Item "$MofPath\*.mof" -Verbose
+    New-Item $MofPath -ItemType Directory -Force
+    Remove-Item "$MofPath\*.mof" -Verbose 
 
     #Remove Test Results from previous runs
-    Remove-Item "$TestResultsPath\*.xml" -Verbose
+    New-Item $TestResultsPath -ItemType Directory -Force
+    Remove-Item "$TestResultsPath\*.xml" -Verbose 
 
     #Remove ConfigData generated from previous runs
     Remove-Item "$ConfigsPath\*.psd1" -Verbose
+
+    #Remove modules that were installed on build Agent
+    foreach ($Resource in $RequiredModules)
+    {
+        Uninstall-Module -Name $Resource.Name -RequiredVersion $Resource.Version
+    }
+
+    #Remove modules from target node
+    $Session = New-PSSession -ComputerName TestAgent1
+
+    foreach ($Resource in $RequiredModules)
+    {
+        $ModulePath = "$env:ProgramFiles\WindowsPowerShell\Modules\$($Resource.Name)\$($Resource.Version)\"
+        
+        Enter-PSSession $Session
+        Remove-Item $ModulePath -Recurse -Force
+    }
+    Remove-PSSession $Session
 }

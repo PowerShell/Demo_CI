@@ -19,17 +19,6 @@ Write-Verbose $sut
 #endregion
 
 Describe "DNSServer Configuration" {
-    Context "Configuration Script" {
-        It "Should be true" {
-            $true | Should be $true
-        }
-        It "Should be 10" {
-            10 | Should be 10
-        }
-    }
-}      
-
-<#
     Context "Configuration Script"{
         
         It "Should be a DSC configuration script" {
@@ -38,18 +27,6 @@ Describe "DNSServer Configuration" {
 
         It "Should not be a DSC Meta-configuration" {
             (Get-Command DNSServer).IsMetaConfiguration | Should Not be $true
-        }
-        
-        It "Should require the source path parameter" {
-            (Get-Command DNSServer).Parameters["SourcePath"].Attributes.Mandatory | Should be $true
-        }
-
-        It "Should fail when an invalid source path is provided" {
-            DNSServer -SourcePath "This is not a path" | should Throw
-        }
-
-        It "Should include the following 3 parameters: 'SourcePath','WebsiteName','DestinationRootPath' " {
-            (Get-Command DNSServer).Parameters["SourcePath","WebsiteName","DestinationRootPath"].ToString() | Should not BeNullOrEmpty 
         }
 
         It "Should use the sDNSServer DSC resource" {
@@ -92,4 +69,3 @@ Describe "DNSServer Configuration" {
 
     }
 }
-#>

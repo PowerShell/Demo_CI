@@ -1,77 +1,53 @@
-Configuration DNSServer
+
+configuration DNSServer
 {
-    Import-DscResource -Module PsDesiredStateConfiguration
-
-    node $AllNodes.where{$_.Role -eq "DNSServer"}.NodeName
-    {
-        Environment Type
-        {
-            ensure   = 'Present'
-            Name     = 'TypeOfServer'
-            Value    = 'DNS'
-        }
-    }
-}
-
-<#
-$zone = 'foo.io'
-
-$ARecords = @{
-    'bar1'='10.0.0.10';
-    'bar2'='10.0.0.20';
-    'bar3'='10.0.0.30';
-    'bar4'='10.0.0.40';
-    'bar5'='10.0.0.50';
-    }
-
-configuration DNS
-{
-    Import-DscResource -module 'xDnsServer','xNetworking','xPSDesiredStateConfiguration'
+    Import-DscResource -module 'xDnsServer','xNetworking'
     
-    xWindowsOptionalFeature DNS
+    Node $AllNodes.Where{$_.Role -eq 'DNSServer'}.NodeName
     {
-        Name = 'DNS-Server-Full-Role'
-        Ensure = 'Present'
-    }
-
-     xDnsServerPrimaryZone $zone
-    {
-        Ensure = 'Present'                
-        Name = $zone
-        DependsOn = '[xWindowsOptionalFeature]DNS'
-    }
-        
-    foreach ($a in $ARecords.keys) {
-        xDnsRecord $a
+        WindowsFeature DNS
         {
-            Name = $a
-            Zone = $zone
-            Type = 'ARecord'
-            Target = $ARecords[$a]
-            Ensure = 'Present'
-            DependsOn = '[xWindowsOptionalFeature]DNS'
+            Ensure  = 'Present'
+            Name    = 'DNS'
+        }
+
+        xDnsServerPrimaryZone $zone
+        {
+            Ensure    = 'Present'                
+            Name      = $Node.Zone
+            DependsOn = '[WindowsFeature]DNS'
+        }
+            
+        foreach ($ARec in $Node.ARecords.keys) {
+            xDnsRecord $ARec
+            {
+                Ensure    = 'Present'
+                Name      = $ARec
+                Zone      = $Node.Zone
+                Type      = 'ARecord'
+                Target    = $ARecords[$ARec]
+                DependsOn = '[WindowsFeature]DNS'
+            }
+        }
+
+        xFirewall TCP53
+        {
+            Ensure     = 'Present'
+            Name       = 'DNS In TCP'
+            Group      = 'DNS Server'
+            Protocol   = 'TCP'
+            LocalPort  = 53
+            RemotePort = 53
+        }
+
+        xFirewall UDP53
+        {
+            Ensure     = 'Present'
+            Name       = 'DNS In UDP'
+            Group      = 'DNS Server'
+            Protocol   = 'UDP'
+            LocalPort  = 53
+            RemotePort = 53
         }
     }
-
-    xFirewall TCP53
-    {
-        Name = 'DNS In TCP'
-        Group = 'DNS Server'
-        Ensure = 'Present'
-        Protocol = 'TCP'
-        LocalPort = 53
-        RemotePort = 53
-    }
-
-    xFirewall UDP53
-    {
-        Name = 'DNS In UDP'
-        Group = 'DNS Server'
-        Ensure = 'Present'
-        Protocol = 'UDP'
-        LocalPort = 53
-        RemotePort = 53
-    }
 }
-
-#>
