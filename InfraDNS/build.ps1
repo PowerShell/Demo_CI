@@ -28,7 +28,7 @@ Properties {
     $TestResultsPath = "$TestsPath\Results"
     $MofPath = "$PSScriptRoot\..\MOF\"
     $ConfigPath = "$PSScriptRoot\Configs"
-    $RequiredModules = 'xDnsServer', 'xNetworking' 
+    $RequiredModules = @(@{Name='xDnsServer';Version='1.7.0.0'}, @{Name='xNetworking';Version='2.9.0.0'}) 
 }
 
 Task Default -depends DeployModules
@@ -44,10 +44,15 @@ Task ScriptAnalysis -Depends GenerateEnvironmentFiles {
 
 }
 
-Task InstallModules #-Depends ScriptAnalysis {
+Task InstallModules <#-Depends ScriptAnalysis#> {
     # Install resources on build agent
     "Installing required resources..."
 
+    #Workaround for bug in Install-Module cmdlet
+    PackageManagement\Get-PackageProvider -Name NuGet -Force
+    Register-PSRepository -Name PSGallery -SourceLocation https://www.powershellgallery.com/api/v2/ -InstallationPolicy Trusted -PackageManagementProvider NuGet
+    #End Workaround
+    
     foreach ($Resource in $RequiredModules)
     {
         Install-Module -Name $Resource.Name -RequiredVersion $Resource.Version
@@ -80,7 +85,7 @@ Task CompileConfigs -Depends UnitTests {
     DNSServer -ConfigurationData "$ConfigPath\TestEnv.psd1" -OutputPath $MofPath
 }
 
-Task DeployModules -Depends InstallModules#, UnitTests {
+Task DeployModules -Depends InstallModules<#, UnitTests#> {
     # Copy resources from build agent to target node(s)
     "Deploying resources to target nodes..."
 
