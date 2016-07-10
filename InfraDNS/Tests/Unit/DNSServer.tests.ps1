@@ -37,26 +37,25 @@ Describe "DNSServer Configuration" {
     Context "Node Configuration" {
         $OutputPath = "TestDrive:\"
         
+        It "Should not be null" {
+            "$configPath\DevEnv.psd1" | Should Exist
+        }
+        
         It "Should generate a single mof file." {
-            DNSServer -OutputPath $OutputPath 
+            DNSServer -ConfigurationData "$configPath\DevEnv.psd1" -OutputPath $OutputPath 
             (Get-ChildItem -Path $OutputPath -File -Filter "*.mof" -Recurse ).count | Should be 1
         }
-
+        
         It "Should generate a mof file with the name 'TestAgent1'." {
-            DNSServer -OutputPath $OutputPath 
+            DNSServer -ConfigurationData "$configPath\DevEnv.psd1" -OutputPath $OutputPath 
             Join-Path $OutputPath "TestAgent1.mof" | Should Exist
         }
-
-        It "Should be a valid DSC MOF document"{
-            DNSServer -OutputPath $OutputPath 
-            mofcomp -check "$OutputPath\TestAgent1.mof" | Select-String "compiler returned error" | Should BeNullOrEmpty
-        }
-
+        
         It "Should generate a new version (2.0) mof document." {
-            DNSServer -OutputPath $OutputPath 
+            DNSServer -ConfigurationData "$configPath\DevEnv.psd1" -OutputPath $OutputPath 
             Join-Path $OutputPath "TestAgent1.mof" | Should Contain "Version=`"2.0.0`""
         }
-
+        
         #Clean up TestDrive between each test
         AfterEach {
             Remove-Item TestDrive:\* -Recurse

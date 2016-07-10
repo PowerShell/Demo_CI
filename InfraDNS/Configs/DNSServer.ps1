@@ -1,7 +1,7 @@
 
 configuration DNSServer
 {
-    Import-DscResource -module 'xDnsServer','xNetworking'
+    Import-DscResource -module 'xDnsServer','xNetworking', 'PSDesiredStateConfiguration'
     
     Node $AllNodes.Where{$_.Role -eq 'DNSServer'}.NodeName
     {
@@ -11,7 +11,7 @@ configuration DNSServer
             Name    = 'DNS'
         }
 
-        xDnsServerPrimaryZone $zone
+        xDnsServerPrimaryZone $Node.zone
         {
             Ensure    = 'Present'                
             Name      = $Node.Zone
@@ -25,29 +25,21 @@ configuration DNSServer
                 Name      = $ARec
                 Zone      = $Node.Zone
                 Type      = 'ARecord'
-                Target    = $ARecords[$ARec]
+                Target    = $Node.ARecords[$ARec]
                 DependsOn = '[WindowsFeature]DNS'
             }
         }
 
-        xFirewall TCP53
-        {
-            Ensure     = 'Present'
-            Name       = 'DNS In TCP'
-            Group      = 'DNS Server'
-            Protocol   = 'TCP'
-            LocalPort  = 53
-            RemotePort = 53
-        }
-
-        xFirewall UDP53
-        {
-            Ensure     = 'Present'
-            Name       = 'DNS In UDP'
-            Group      = 'DNS Server'
-            Protocol   = 'UDP'
-            LocalPort  = 53
-            RemotePort = 53
+        foreach ($CName in $Node.CNameRecords.keys) {
+            xDnsRecord $CName
+            {
+                Ensure    = 'Present'
+                Name      = $CName
+                Zone      = $Node.Zone
+                Type      = 'CName'
+                Target    = $Node.CNameRecords[$CName]
+                DependsOn = '[WindowsFeature]DNS'
+            }
         }
     }
 }

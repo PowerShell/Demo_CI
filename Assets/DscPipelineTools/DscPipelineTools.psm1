@@ -52,12 +52,19 @@ function New-DscConfigurationDataDocument
             [hashtable]$NodeData =  @{    NodeName                = "$($Role.VMName)$j"
                                 Role                    = $Role.Role
                             }
+            # Remove Role and VMName from HT
+            $role.remove("Role")
+            $role.remove("VMName")
+
             # Add Lability properties to ConfigurationData if they are included in the raw hashtable
             if($Role.ContainsKey('VMProcessorCount')){ $NodeData  +=  @{Lability_ProcessorCount = $Role.VMProcessorCount}}
             if($Role.ContainsKey('VMStartupMemory')){$NodeData  +=  @{Lability_StartupMemory  = $Role.VMStartupMemory}}
             if($Role.ContainsKey('NetworkName')){    $NodeData  +=  @{Lability_SwitchName     = $Role.NetworkName}}
             if($Role.ContainsKey('VMMedia')){        $NodeData  +=  @{Lability_Media          = $Role.VMMedia}}
             
+            # Add all other properties
+            $Role.keys | % {$NodeData += @{$_ = $Role.$_}}
+
             # Generate networking data for static networks 
             Foreach ($Network in $OtherEnvData)
             {
@@ -90,7 +97,7 @@ function New-DscConfigurationDataDocument
         $NetworkData += $NetworkHash
     }
     
-    $NonNodeData = @{Lability=@{Network = $NetworkData}}
+    $NonNodeData = if($NetworkData){ @{Lability=@{Network = $NetworkData}}}
     $ConfigData = @{AllNodes = $AllNodesData; NonNodeData = $NonNodeData}
     
 
