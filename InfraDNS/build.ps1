@@ -34,7 +34,7 @@ Properties {
     $RequiredModules = @(@{Name='xDnsServer';Version='1.7.0.0'}, @{Name='xNetworking';Version='2.9.0.0'}) 
 }
 
-Task Default -depends CompileConfigs
+Task Default -depends UnitTests
 
 Task GenerateEnvironmentFiles -Depends Clean {
      Exec {& $PSScriptRoot\DevEnv.ps1 -OutputPath $ConfigPath}
@@ -67,7 +67,7 @@ Task InstallModules -Depends GenerateEnvironmentFiles {
 Task ScriptAnalysis -Depends InstallModules {
     # Run Script Analyzer
     "Starting static analysis..."
-    Invoke-ScriptAnalyzer -Path $ConfigPath -ExcludeRule 'PSMissingModuleManifestField'
+    Invoke-ScriptAnalyzer -Path $ConfigPath
 
 }
 
