@@ -5,10 +5,12 @@ param(
     $fileName
 )
 
+#$Error.Clear()
 
-Invoke-PSake $PSScriptRoot\InfraDNS\$fileName.ps1 -ErrorVariable PSakeErrors
+Invoke-PSake $PSScriptRoot\InfraDNS\$fileName.ps1
 
-if($PSakeErrors.count)
+<#if($Error.count)
 {
     Throw "$fileName script failed. Check logs for failure details."
 }
+#>
