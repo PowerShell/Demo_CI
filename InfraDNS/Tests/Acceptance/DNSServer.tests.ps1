@@ -29,7 +29,7 @@ Describe 'Web Server E2E' {
             $PortTest.TcpTestSucceeded | Should be $true 
         }
 
-        It "Should successfully ping port 80" {
+        It "Should not be able to ping port 80" {
             $PortTest.PingSucceeded | Should be $false
         }
     }
