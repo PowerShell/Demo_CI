@@ -17,7 +17,7 @@ Describe 'Web Server E2E' {
         }
 
         It "Should resolve DNS to TestAgent1" {
-            (Resolve-DnsName -Name dns.contoso.com -DnsOnly -NoHostsFile).NameHost | Should be 'TestAgent1' 
+            (Resolve-DnsName -Name dns.contoso.com -Type CNAME -DnsOnly -NoHostsFile).NameHost | Should be 'TestAgent1' 
         }
     }
     
