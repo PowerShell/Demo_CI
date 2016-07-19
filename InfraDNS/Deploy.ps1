@@ -18,7 +18,7 @@ function Invoke-TestFailure
     $exception = New-Object -TypeName System.SystemException -ArgumentList $errorMessage
     $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception,$errorID, $errorCategory, $null
 
-    Write-Host "##vso[task.logissue type=error]$errorMessage"
+    Write-Output "##vso[task.logissue type=error]$errorMessage"
     Throw $errorRecord
 }
 
