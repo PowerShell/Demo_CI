@@ -1,23 +1,5 @@
 ﻿Configuration Website
 {
-    import-dscresource -module PsDesiredStateConfiguration
-
-    node $AllNodes.where{$_.Role -eq "Website"}.NodeName
-    {
-        Environment Type
-        {
-            ensure   = 'Present'
-            Name     = 'TypeOfServer'
-            Value    = 'Web'
-        }
-    }
-}
-
-Website -OutputPath c:\Configs\
-
-<# Removing config temporarily
-Configuration Website
-{
     param
     (
         # Source Path for Website content
@@ -35,7 +17,7 @@ Configuration Website
     )
 
     # Import the module that defines custom resources
-    Import-DscResource -Module xWebAdministration
+    Import-DscResource -ModuleName xWebAdministration
     Import-DscResource -ModuleName PSDesiredStateConfiguration
 
     Node "Website.$WebSiteName"
@@ -84,4 +66,3 @@ Configuration Website
         }
     }
 }
-#>
