@@ -91,7 +91,7 @@ Task Clean {
     Remove-Item "$(Join-Path $TestResultsPath '*.xml')" -Verbose 
 
     #Remove ConfigData generated from previous runs
-    Remove-Item "$(Join-Path $ConfigsPath '*.psd1')" -Verbose
+    Remove-Item "$(Join-Path $ConfigPath '*.psd1')" -Verbose
 
     #Remove modules that were installed on build Agent
     foreach ($Resource in $RequiredModules)

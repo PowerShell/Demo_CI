@@ -13,8 +13,9 @@ Write-Verbose $GrandParent
 $configPath = Join-Path $GrandParent "Configs"
 Write-Verbose $configPath
 $sut = ($MyInvocation.MyCommand.ToString()) -replace ".Tests.","."
+$sut = $sut -replace ".ps1",".psd1"
 Write-Verbose $sut
-. $(Join-Path -Path $configPath -ChildPath $sut)
+Import-Module (Join-Path -Path $configPath -ChildPath $sut)
 
 #endregion
 
