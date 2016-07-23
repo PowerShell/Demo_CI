@@ -106,7 +106,7 @@ Task Clean {
     Remove-Item "$TestResultsPath\*.xml" -Verbose 
 
     #Remove ConfigData generated from previous runs
-    Remove-Item "$ConfigsPath\*.psd1" -Verbose
+    Remove-Item "$ConfigPath\*.psd1" -Verbose
 
     #Remove modules that were installed on build Agent
     foreach ($Resource in $RequiredModules)
