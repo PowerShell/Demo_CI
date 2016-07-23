@@ -12,7 +12,6 @@ function New-DscConfigurationDataDocument
         [string]
         $OutputPath = '.\', 
         
-        [ValidateNotNullorEmpty()]
         [string]
         $FileName
         
@@ -27,7 +26,7 @@ function New-DscConfigurationDataDocument
         Throw "The OutPutPath parameter must be a valid path and must not be an existing file." 
     }
 
-    if (-not $PSboundParameters['FileName'])
+    if ($FileName.length -eq 0)
     {
         $FileName = $RawEnvData.Name
     }
@@ -35,11 +34,9 @@ function New-DscConfigurationDataDocument
     
     ## Loop through $RawEnvData and generate Configuration Document
     # Create AllNodes array based on input
-    $AllNodesData = foreach ($Role in $RawEnvData.Roles)
+    foreach ($Role in $RawEnvData.Roles)
     {
         $NumberOfServers = 0
-        $VMName = [array]$Role.VMName
-
         if($Role.VMQuantity -gt 0)
         {
             $NumberOfServers = $Role.VMQuantity
@@ -49,26 +46,21 @@ function New-DscConfigurationDataDocument
             $NumberOfServers = $Role.VMName.Count
         }
 
-        for($i = 0; $i -lt $NumberOfServers; $i++)
+        for($i = 1; $i -le $NumberOfServers; $i++)
         {
-            $NodeData =  @{    NodeName  = if($Role.VMQuantity -gt 0) {
-                                                "$($VMName[0])$i"
-                                            } else {
-                                                write-verbose "VMName = $VMName   i = $i"
-                                                "$($VMName[$i])"
-                                            }
-                                Role     = $Role.Role
+            $j = if($Role.VMQuantity -gt 0){$i}
+            [hashtable]$NodeData =  @{    NodeName                = "$($Role.VMName)$j"
+                                Role                    = $Role.Role
                             }
             # Remove Role and VMName from HT
             $role.remove("Role")
             $role.remove("VMName")
-            $role.remove("VMQuantity")
 
             # Add Lability properties to ConfigurationData if they are included in the raw hashtable
-            if($Role.ContainsKey('VMProcessorCount')){ $NodeData['Lability_ProcessorCount'] =  $Role.VMProcessorCount}
-            if($Role.ContainsKey('VMStartupMemory')){$NodeData['Lability_StartupMemory']  = $Role.VMStartupMemory}
-            if($Role.ContainsKey('NetworkName')){    $NodeData['Lability_SwitchName']     = $Role.NetworkName}
-            if($Role.ContainsKey('VMMedia')){        $NodeData['Lability_Media']          = $Role.VMMedia}
+            if($Role.ContainsKey('VMProcessorCount')){ $NodeData  +=  @{Lability_ProcessorCount = $Role.VMProcessorCount}}
+            if($Role.ContainsKey('VMStartupMemory')){$NodeData  +=  @{Lability_StartupMemory  = $Role.VMStartupMemory}}
+            if($Role.ContainsKey('NetworkName')){    $NodeData  +=  @{Lability_SwitchName     = $Role.NetworkName}}
+            if($Role.ContainsKey('VMMedia')){        $NodeData  +=  @{Lability_Media          = $Role.VMMedia}}
             
             # Add all other properties
             $Role.keys | % {$NodeData += @{$_ = $Role.$_}}
@@ -82,25 +74,27 @@ function New-DscConfigurationDataDocument
                 }
             }
             
-            $NodeData
+            [System.Array]$AllNodesData += $NodeData
         }
     }
     
     # Create NonNodeData hashtable based on input            
-    $NetworkData = foreach ($Network in $OtherEnvData )
+    foreach ($Network in $OtherEnvData )
     {
-        @{
-            Name   = $Network.NetworkName;
-            Type   = $Network.SwitchType;
+        [hashtable]$NetworkHash += @{
+                            Name   = $Network.NetworkName;
+                            Type   = $Network.SwitchType;
         }
         
         if ($Network.ContainsKey('ExternalAdapterName'))
         {
-            @{
-                NetAdapterName      = $Network.ExternalAdapterName;
-                AllowManagementOS   = $true;
+            $NetworkHash += @{
+                            NetAdapterName      = $Network.ExternalAdapterName;
+                            AllowManagementOS   = $true;
             }
         }
+        
+        $NetworkData += $NetworkHash
     }
     
     $NonNodeData = if($NetworkData){ @{Lability=@{Network = $NetworkData}}}
@@ -112,38 +106,21 @@ function New-DscConfigurationDataDocument
         New-Item $OutputPath -ItemType Directory
     }
     
-    Import-Module $PSScriptRoot\Visualization.psm1
-    $ConfigData | ConvertTo-ScriptBlock | Out-File $OutFile
+    import-module $PSScriptRoot\Visualization.psm1
+    $ConfigData | convertto-ScriptBlock | Out-File $OutFile
     $FullFileName = dir $OutFile
     
-    "Successfully created file $FullFileName"
+    Return "Successfully created file $FullFileName"
 }
 
-function New-TestValidation
+# Get list of resources required by a configuration script
+function Get-DscRequiredResources ()
 {
     param(
-        [parameter(Mandatory=$true)]
-        [validateSet('Unit','Integration','Acceptance')]
-        [string]$TestType,
-
-        [parameter(Mandatory=$true)]
-        $PesterResults
+        [Parameter(Mandatory)]
+        [string[]]
+        $Path
     )
-
-    if($PesterResults.FailedCount) #If Pester fails any tests fail this task
-    {
-        $errorID = switch ($TestType) {
-                                        'Unit' { 'UnitTestFailure' }
-                                        'Integration' { 'InetegrationTestFailure' }
-                                        'Acceptance' { 'AcceptanceTestFailure' }
-                                        Default {}
-                                    }
-        $errorCategory = [System.Management.Automation.ErrorCategory]::LimitsExceeded
-        $errorMessage = "$TestType Test Failed: $($PesterResults.FailedCount) tests failed out of $($PesterResults.TotalCount) total test."
-        $exception = New-Object -TypeName System.SystemException -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception,$errorID, $errorCategory, $null
-
-        Write-Output "##vso[task.logissue type=error]$errorMessage"
-        Throw $errorRecord
-    }
+    
+    
 }
