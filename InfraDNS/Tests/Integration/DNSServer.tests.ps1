@@ -73,7 +73,7 @@ Describe 'DNS Server' {
         }
 
         It "Should have a CName record for DNS pointing to TestAgent1" {
-            (Get-DnsServerResourceRecord -Name dns -ZoneName contoso.com).RecordData.HostNameAlias | Should be 'TestAgent1.'
+            (Get-DnsServerResourceRecord -Name dns -ZoneName contoso.com).RecordData.HostNameAlias | Should match 'TestAgent1.'
         }
     }
 }
