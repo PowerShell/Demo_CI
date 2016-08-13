@@ -71,7 +71,7 @@ Task ScriptAnalysis -Depends InstallModules {
 
 }
 
-Task UnitTests -Depends InstallModules {
+Task UnitTests -Depends ScriptAnalysis {
     # Run Unit Tests with Code Coverage
     "Starting unit tests..."
 
