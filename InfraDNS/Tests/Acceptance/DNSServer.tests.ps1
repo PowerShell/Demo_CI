@@ -5,6 +5,7 @@
 ####################################################################
 
 Import-Module PoshSpec
+Clear-DnsClientCache
 
 Describe 'Web Server E2E' {
     Context 'DNS addressess' {
