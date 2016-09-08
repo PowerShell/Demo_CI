@@ -32,7 +32,7 @@ Properties {
     $MOFArtifactPath = "$ArtifactPath\MOF"
 }
 
-Task Default -depends AcceptanceTests
+Task Default -depends AcceptanceTests, IntegrationTests
 
 Task DeployModules -Depends Clean {
     # Copy resources from build agent to target node(s)
