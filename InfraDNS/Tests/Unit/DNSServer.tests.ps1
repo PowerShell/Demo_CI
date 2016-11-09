@@ -29,7 +29,7 @@ Describe "DNSServer Configuration" {
             (Get-Command DNSServer).IsMetaConfiguration | Should Not be $true
         }
 
-        It "Should use the sDNSServer DSC resource" {
+        It "Should use the xDNSServer DSC resource" {
             (Get-Command DNSServer).Definition | Should Match "xDNSServer"
         }
     }
