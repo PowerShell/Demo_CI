@@ -1,9 +1,10 @@
-﻿Configuration ServerHardening
+Configuration ServerHardening
 {
     Import-DscResource -ModuleName PSDesiredStateConfiguration
 
     Node "Server1"
     {
+        # Make sure that the Guest and DefaultAccount are disabled.
         User Guest
         {
             Ensure = 'Present'
@@ -18,6 +19,28 @@
             Disabled = $true
         }
 
+        #User Account Control - prompt admin 
+        Registry ConsentPromptBehaviorAdmin
+        {
+            Ensure = "Present"
+            Key = "HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System"
+            ValueName = "ConsentPromptBehaviorAdmin"
+            ValueType = "Dword"
+            ValueData = "5"
+        }  
+
+        #Interactive logon: Number of previous logons to cache (in case domain controller is not available)
+        Registry Numberofpreviouslogonstocache
+        {
+            Ensure = "Present"
+            Key = "HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Winlogon"
+            ValueName = "CachedLogonsCount"
+            ValueType = "Dword"
+            ValueData = "2"
+        }
+
+
+        # Use the WindowsFeatureSet resource to ensure that a set Features are absent.
         WindowsFeatureSet DisallowedFeatures
         {
             Ensure = 'Absent'
@@ -29,6 +52,7 @@
                         'ServerEssentialsRole')
         }
 
+        # Use the WindowsFeatureSet resource to ensure that a set features are present.
         WindowsFeatureSet RequiredFeatures
         {
             Ensure = 'Present'
@@ -39,6 +63,7 @@
                         'Windows-Server-Backup')
         }
 
+        # Use the ServiceSet resource to stop and disable a set of services.
         ServiceSet DisallowedServices
         {
             Name = @(   'defragsvc',
@@ -49,26 +74,21 @@
             StartupType = 'Disabled' 
         }
 
+        # Add a few environment variables that can be used by applications or other configurations.
         Environment Corp
         {
+            Ensure = 'Present'
             Name = 'PropertyOf'
             Value = 'Contoso'
         }
 
         Environment Team
         {
+            Ensure = 'Present'
             Name = 'ManagedBy'
             Value = 'CentralIT'
-        }
-
-        GroupSet DomainUser
-        {
-            Ensure = 'Present'
-            GroupName = @('Administrators','Backup Operators','Remote Management Users', 'Power Users')
-            MembersToExclude = 'everyone'
         }
     }
 }
 
 ServerHardening -OutputPath c:\LabFiles\Mofs\Hardening
-
