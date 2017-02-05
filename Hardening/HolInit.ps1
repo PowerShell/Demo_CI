@@ -1,5 +1,5 @@
 # Set up trusted hosts
-Start-Service wsman
+Start-Service winrm
 Set-Item WSMan:\localhost\Client\TrustedHosts -Value * -Force
 
 # Set Credential
