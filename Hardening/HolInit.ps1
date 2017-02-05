@@ -4,7 +4,7 @@ Set-Item WSMan:\localhost\Client\TrustedHosts -Value * -Force
 
 # Set Credential
 $UserName = 'DscDemo'
-$Password = ConvertTo-SecureString -String "P0werOfTh3She11" -AsPlainText -Force
+$Password = ConvertTo-SecureString -String "Power0fTh3She11" -AsPlainText -Force
 $Cred =  New-Object System.Management.Automation.PsCredential -ArgumentList $UserName, $Password
 
 # Pick 3 of a set of pre-define Servers
