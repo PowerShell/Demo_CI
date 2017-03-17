@@ -51,14 +51,14 @@ Task DeployModules -Depends Clean {
 
 Task DeployConfigs -Depends DeployModules {
     "Deploying configurations to target nodes..."
-    #This task uses push to deploy configurations. This task could be used to package up and push configurations to pull server instead.
+    # Start the configuration on TestAgent1. This task could be used to package and place configurations on a pull server instead.
     Start-DscConfiguration -path "$MOFArtifactPath\DevEnv" -Wait -Verbose
 }
 
 Task IntegrationTests -Depends DeployConfigs {
     "Starting Integration tests..."
     #Run Integration tests on target node
-    $Session = New-PSSession -ComputerName TestAgent1
+    $Session = New-PSSession -ComputerName 13.78.178.187
 
     #Create a folder to store test script on remote node
     Invoke-Command -Session $Session -ScriptBlock { $null = new-item \Tests\ -ItemType Directory -Force }
