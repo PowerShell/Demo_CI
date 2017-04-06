@@ -37,7 +37,7 @@ Properties {
 # Setting default task to CompileConfigs ensures all tasks will run
 Task Default -depends CompileConfigs
 
-# Fun the script that genreates the configuration data file
+# Run the script that genreates the configuration data file
 Task GenerateEnvironmentFiles -Depends Clean {
      Exec {& $PSScriptRoot\DevEnv.ps1 -OutputPath $ConfigPath}
 }
@@ -46,7 +46,7 @@ Task InstallModules -Depends GenerateEnvironmentFiles {
     # Install resources on build agent
     "Installing required resources..."
 
-    #Workaround for bug in Install-Module cmdlet
+    # Workaround for bug in Install-Module cmdlet
     if(!(Get-PackageProvider -Name NuGet -ListAvailable -ErrorAction  Continue ))
     {
         Install-PackageProvider -Name NuGet -Force
@@ -57,7 +57,7 @@ Task InstallModules -Depends GenerateEnvironmentFiles {
         Register-PSRepository -Name PSGallery -SourceLocation https://www.powershellgallery.com/api/v2/ -InstallationPolicy Trusted -PackageManagementProvider NuGet
     }
     
-    #End Workaround
+    # End Workaround
     
     foreach ($Resource in $RequiredModules)
     {
