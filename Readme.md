@@ -1,3 +1,4 @@
-# Sample Continuous integration Pipeline project
+# Sample Pipeline project
 
-This content will be used for labs showing how to create a CI Pipeline useing DSC, Pester, Visual Studio TFS, etc.
+This content will be used for labs.
+The included word document provides a step by step guide.
