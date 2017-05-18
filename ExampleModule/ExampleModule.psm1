@@ -5,7 +5,8 @@
     New-Example1
 
     Returns 'Hello, World'
-#>Function New-Example1 {
+#>
+Function New-Example1 {
 
     [Alias('Example1')]
     [CmdletBinding()]
@@ -20,7 +21,8 @@
     New-Example2 -text 'Hello, Word'
 
     Returns 'Hello, World'
-#>Function New-Example2 {
+#>
+Function New-Example2 {
     [Alias('Example2')]
     [CmdletBinding()]
     param(
@@ -36,7 +38,8 @@
     New-Example3 -First 3 -Second 5
 
     Returns 8
-#>Function New-Example3 {
+#>
+Function New-Example3 {
     [Alias('Example3')]
     [CmdletBinding()]
     param(
