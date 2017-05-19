@@ -58,7 +58,7 @@ Task DeployConfigs -Depends DeployModules {
 Task IntegrationTests -Depends DeployConfigs {
     "Starting Integration tests..."
     #Run Integration tests on target node
-    $Session = New-PSSession -ComputerName 13.78.178.187
+    $Session = New-PSSession -ComputerName TestAgent1
 
     #Create a folder to store test script on remote node
     Invoke-Command -Session $Session -ScriptBlock { $null = new-item \Tests\ -ItemType Directory -Force }
