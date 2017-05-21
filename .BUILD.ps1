@@ -23,7 +23,9 @@ param(
 
 # Ensure Invoke-Build works in the most strict mode.
 Set-StrictMode -Version Latest
-
+task Clean {
+    $CleanModule    = Remove-Item "$env:userprofile\Documents\WindowsPowerShell\Modules\$ModuleName" -Recurse -Force
+}
 # Synopsis: Run PowerShell Script Analyzer
 task Clean {
     $CleanModule    = Remove-Item "$env:userprofile\Documents\WindowsPowerShell\Modules\$ModuleName" -Recurse -Force

@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-    Example function that returns a string, 'Hello, World'
+    Example function that returns Hello, World
+
 .EXAMPLE
     Get-Example1
 
     Returns 'Hello, World'
 #>
 Function Get-Example1 {
-
     [Alias('Example1')]
     [CmdletBinding()]
     param(
