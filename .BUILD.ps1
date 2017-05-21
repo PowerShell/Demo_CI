@@ -59,5 +59,5 @@ task Publish {
 }
 
 # Synopsis: The default task: make and test all, then clean.
-# task . Update, Copy, Publish, Clean
-task . Update, Pester, Copy, Publish, Clean
+task . Update, Copy, Publish, Clean
+# task . Update, Pester, Copy, Publish, Clean
