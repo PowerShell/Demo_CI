@@ -34,8 +34,10 @@ Properties {
     $RequiredModules = @(@{Name='xDnsServer';Version='1.7.0.0'}, @{Name='xNetworking';Version='2.9.0.0'}) 
 }
 
-Task Default -depends UnitTests
+# Setting default task to CompileConfigs ensures all tasks will run
+Task Default -depends CompileConfigs
 
+# Run the script that genreates the configuration data file
 Task GenerateEnvironmentFiles -Depends Clean {
      Exec {& $PSScriptRoot\DevEnv.ps1 -OutputPath $ConfigPath}
 }
@@ -44,30 +46,30 @@ Task InstallModules -Depends GenerateEnvironmentFiles {
     # Install resources on build agent
     "Installing required resources..."
 
-    #Workaround for bug in Install-Module cmdlet
-    if(!(Get-PackageProvider -Name NuGet -ListAvailable -ErrorAction Ignore))
+    # Workaround for bug in Install-Module cmdlet
+    if(!(Get-PackageProvider -Name NuGet -ListAvailable -ErrorAction  Continue ))
     {
         Install-PackageProvider -Name NuGet -Force
     }
     
-    if (!(Get-PSRepository -Name PSGallery -ErrorAction Ignore))
+    if (!(Get-PSRepository -Name PSGallery -ErrorAction Continue))
     {
         Register-PSRepository -Name PSGallery -SourceLocation https://www.powershellgallery.com/api/v2/ -InstallationPolicy Trusted -PackageManagementProvider NuGet
     }
     
-    #End Workaround
+    # End Workaround
     
     foreach ($Resource in $RequiredModules)
     {
-        Install-Module -Name $Resource.Name -RequiredVersion $Resource.Version -Repository 'PSGallery' -Force
-        Save-Module -Name $Resource.Name -RequiredVersion $Resource.Version -Repository 'PSGallery' -Path $ModuleArtifactPath -Force
+        Install-Module -Name $Resource.Name -RequiredVersion $Resource.Version -Force
+        Save-Module -Name $Resource.Name -RequiredVersion $Resource.Version -Path $ModuleArtifactPath -Force
     }
 }
 
 Task ScriptAnalysis -Depends InstallModules {
     # Run Script Analyzer
     "Starting static analysis..."
-    Invoke-ScriptAnalyzer -Path $ConfigPath
+    Invoke-ScriptAnalyzer -Path $ConfigPath -ExcludeRule 'PSMissingModuleManifestField'
 
 }
 

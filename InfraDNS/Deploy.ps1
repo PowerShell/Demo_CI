@@ -51,7 +51,7 @@ Task DeployModules -Depends Clean {
 
 Task DeployConfigs -Depends DeployModules {
     "Deploying configurations to target nodes..."
-    #This task uses push to deploy configurations. This task could be used to package up and push configurations to pull server instead.
+    # Start the configuration on TestAgent1. This task could be used to package and place configurations on a pull server instead.
     Start-DscConfiguration -path "$MOFArtifactPath\DevEnv" -Wait -Verbose
 }
 

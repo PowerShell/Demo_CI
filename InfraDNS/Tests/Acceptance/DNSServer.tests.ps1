@@ -20,11 +20,16 @@ Describe 'Web Server E2E' {
         It "Should resolve DNS to TestAgent1" {
             (Resolve-DnsName -Name dns.contoso.com -Type CNAME -DnsOnly -NoHostsFile).NameHost | Should match 'TestAgent1' 
         }
+
+        ↪	It "Should resolve WWW to TestAgent2" {
+↪	    (Resolve-DnsName -Name www.contoso.com -Type CName -DnsOnly -NoHostsFile).NameHost | Should be 'TestAgent2' 
+↪	} 
+
     }
     
     Context 'Web server ports' {
 
-        $PortTest = Test-NetConnection -ComputerName testagent2.contoso.com -Port 80
+        $PortTest = Test-NetConnection -ComputerName www.contoso.com -Port 80
 
         It "Should successfully Test TCP port 80" {
             $PortTest.TcpTestSucceeded | Should be $true 
@@ -36,7 +41,7 @@ Describe 'Web Server E2E' {
     }
 
     Context 'Website content' {
-        $WebRequest = Invoke-WebRequest -Uri http://testagent2.contoso.com -UseBasicParsing
+        $WebRequest = Invoke-WebRequest -Uri http://www.contoso.com -UseBasicParsing
 
         It "Should have a status code of 200" {
             $WebRequest.StatusCode | Should be 200
